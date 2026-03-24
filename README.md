@@ -57,6 +57,8 @@ specialized adder modules:
 - `AddRecBF16_NIC`: single-lane BF16 adder specialization.
 - `AddRecBF16_NIC_Array(lanes)`: multi-lane parallel array for throughput
   scaling.
+- `AddBF16FTZ`: standalone BF16 adder specialization without recoded format.
+- `AddBF16FTZ_Array(lanes)`: multi-lane array of `AddBF16FTZ`.
 
 Design choices for throughput-oriented specialization:
 
@@ -65,6 +67,12 @@ Design choices for throughput-oriented specialization:
 - Fixed tininess detection: after rounding.
 - Optional pruning (`flushSubnormals = true` by default): subnormal inputs are
   flushed to signed zero to simplify datapath behavior in many NIC workloads.
+- `AddBF16FTZ` hard-prunes for NIC usage:
+  - IEEE BF16 input/output directly (no recoded datapath).
+  - Input FTZ (subnormals flushed to zero), output also avoids subnormal
+    emission by flushing underflowed results to zero.
+  - Fixed add-only datapath and fixed round-to-nearest-even (RNE).
+  - Minimal interface (`a`, `b`, `out`) without exception/tininess signals.
 
 Example (Chisel):
 
