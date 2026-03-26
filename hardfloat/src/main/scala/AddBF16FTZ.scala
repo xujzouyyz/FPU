@@ -12,14 +12,7 @@ object BF16Lite {
     val posZero: UInt = 0.U(width.W)
 }
 
-/** BF16 adder specialization for NIC-like workloads.
-  *
-  * Design goals:
-  *   - IEEE BF16 input/output format directly (no recoded format).
-  *   - FTZ policy: all subnormal inputs are treated as signed zero.
-  *   - Fixed rounding: round-to-nearest-even.
-  *   - Minimal interface: add-only and output-only datapath.
-  */
+
 class AddBF16FTZ extends RawModule {
     val io = IO(new Bundle {
         val a = Input(UInt(BF16Lite.width.W))
@@ -119,6 +112,8 @@ class AddBF16FTZ extends RawModule {
         val largeFrac = Mux(aGeB, aFrac, bFrac)
         val smallFrac = Mux(aGeB, bFrac, aFrac)
 
+        val smallSign = Mux(aGeB, bSign, aSign)
+
         val largeIsZero = Mux(aGeB, aIsZero, bIsZero)
         val smallIsZero = Mux(aGeB, bIsZero, aIsZero)
 
@@ -181,7 +176,7 @@ class AddBF16FTZ extends RawModule {
             val sticky = normExt(0)
             val roundUp = guard && (round || sticky || mantPre(0))
 
-            val mantRounded = mantPre + roundUp // 9 bits
+            val mantRounded = mantPre +& roundUp // 9 bits via expanding add
             val roundCarry = mantRounded(8)
             val mantFinal = Mux(roundCarry, mantRounded(8, 1), mantRounded(7, 0))
             val expAfterRound = expNormS + roundCarry.asUInt.zext
