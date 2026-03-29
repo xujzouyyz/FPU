@@ -191,20 +191,3 @@ class AddBF16FTZ extends RawModule {
 
     io.out := outReg
 }
-
-class AddBF16FTZ_Array(lanes: Int) extends RawModule {
-    require(lanes > 0, "lanes must be greater than 0")
-
-    val io = IO(new Bundle {
-        val a = Input(Vec(lanes, UInt(BF16Lite.width.W)))
-        val b = Input(Vec(lanes, UInt(BF16Lite.width.W)))
-        val out = Output(Vec(lanes, UInt(BF16Lite.width.W)))
-    })
-
-    for (lane <- 0 until lanes) {
-        val add = Module(new AddBF16FTZ)
-        add.io.a := io.a(lane)
-        add.io.b := io.b(lane)
-        io.out(lane) := add.io.out
-    }
-}

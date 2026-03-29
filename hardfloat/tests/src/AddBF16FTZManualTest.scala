@@ -64,7 +64,7 @@ class AddBF16FTZManualTest extends AnyFlatSpec with ChiselScalatestTester {
 
   it should "compute 1.5 + 0.25" in {
     test(new AddBF16FTZ_TestWrapper) { dut =>
-      runAdd(dut, 1.5f, 0.25f)
+      runAdd(dut, -5.0f, 0.25f)
     }
   }
 }
